@@ -1,0 +1,57 @@
+name: Windows release
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tests and release version
+        shell: pwsh
+        run: |
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw "Tests failed." }
+          powershell.exe -NoProfile -File .\tests\updater.test.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Updater tests failed." }
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          if ($env:GITHUB_REF_NAME -ne "v$($package.version)") {
+            throw "Tag $env:GITHUB_REF_NAME must match package version v$($package.version)."
+          }
+      - name: Package tracked project files
+        shell: pwsh
+        run: |
+          $archive = Join-Path $PWD "VIKTOR-$env:GITHUB_REF_NAME-Windows.zip"
+          $staging = Join-Path $env:RUNNER_TEMP "viktor-release"
+          $sourceArchive = Join-Path $env:RUNNER_TEMP "viktor-source.zip"
+          git archive --format=zip --output="$sourceArchive" HEAD
+          if ($LASTEXITCODE -ne 0) { throw "Could not create the release archive." }
+          Expand-Archive -LiteralPath $sourceArchive -DestinationPath $staging
+          $source = @{ repository = $env:GITHUB_REPOSITORY } | ConvertTo-Json
+          [IO.File]::WriteAllText((Join-Path $staging "release-source.json"), $source, [Text.UTF8Encoding]::new($false))
+          Compress-Archive -Path (Join-Path $staging "*") -DestinationPath $archive
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $archive = Join-Path $PWD "VIKTOR-$env:GITHUB_REF_NAME-Windows.zip"
+          gh release view $env:GITHUB_REF_NAME
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:GITHUB_REF_NAME $archive --clobber
+          } else {
+            gh release create $env:GITHUB_REF_NAME $archive --title "VIKTOR $env:GITHUB_REF_NAME" --generate-notes
+          }
+          if ($LASTEXITCODE -ne 0) { throw "Could not publish the Windows release archive." }

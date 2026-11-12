@@ -1,0 +1,4 @@
+.env
+.viktor/
+node_modules/
+Viktor/Memory/Temporary/behavior.json

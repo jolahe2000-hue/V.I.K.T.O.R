@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111522">
+    <title>VIKTOR · Persönlicher KI-Assistent</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="VIKTOR Startseite">
+          <span class="brand-mark">V</span>
+          <span><strong>VIKTOR</strong><small>Personal AI workspace</small></span>
+        </a>
+        <div class="workspace-chip"><span class="status-dot"></span><span id="workspace-name">Workspace</span></div>
+        <nav class="navigation" aria-label="Hauptnavigation">
+          <button class="nav-item active" data-view="chat"><span>◌</span> Chat</button>
+          <button class="nav-item" data-view="agents"><span>✳</span> Agenten</button>
+          <button class="nav-item" data-view="workspace"><span>⌘</span> Projekt</button>
+          <button class="nav-item" data-view="memory"><span>◫</span> Memory &amp; Logs</button>
+          <button class="nav-item" data-view="settings"><span>⚙</span> Einstellungen</button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="provider-indicator"><span class="status-dot" id="provider-dot"></span><span id="provider-status">Prüfe Modell …</span></div>
+          <div class="version-label">VIKTOR <span>v0.2.0</span></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div><span class="eyebrow">DEIN PERSÖNLICHER ASSISTENT</span><h1 id="page-title">Chat mit Viktor</h1></div>
+          <div class="task-state" id="task-state"><span class="status-dot"></span><span>Bereit</span></div>
+        </header>
+
+        <section class="view active" id="view-chat" aria-label="Chat">
+          <div class="model-notice" id="model-notice" hidden>
+            <strong id="model-notice-title">Das lokale KI-Modell ist noch nicht startbereit.</strong>
+            <p id="model-notice-text"></p>
+            <span id="local-setup-actions"><a href="https://ollama.com/download/windows" target="_blank" rel="noreferrer">Ollama für Windows herunterladen</a>
+              <span> Danach in PowerShell ausführen: <code id="ollama-pull-command">ollama pull qwen3:4b</code></span></span>
+          </div>
+          <div class="chat-toolbar">
+            <label for="agent-select">Aktiver Agent</label>
+            <select id="agent-select"><option value="">Viktor · Allgemein</option></select>
+          </div>
+          <div class="message-list" id="message-list" aria-live="polite"></div>
+          <div class="composer-wrap">
+            <div class="permission-options">
+              <label class="permission-option"><input id="allow-tests" type="checkbox"> Testläufe erlauben</label>
+              <label class="permission-option"><input id="allow-code" type="checkbox"> Projektdatei ausführen</label>
+            </div>
+            <form id="chat-form" class="composer">
+              <textarea id="message-input" rows="2" maxlength="8000" placeholder="Schreib Viktor, was du erledigen möchtest …" aria-label="Nachricht an Viktor"></textarea>
+              <button id="send-button" class="send-button" type="submit" aria-label="Nachricht senden">Senden <span>↗</span></button>
+            </form>
+            <p class="composer-note">Dateien bleiben im Workspace. Tests und Programmstarts brauchen jeweils deine Freigabe.</p>
+          </div>
+        </section>
+
+        <section class="view" id="view-agents">
+          <div class="section-intro"><div><span class="eyebrow">SPEZIALISIERTE HELFER</span><h2>Deine Agenten</h2><p>Viktor kann Agenten auf deinen Auftrag hin erstellen. Wähle einen Agenten oben im Chat, um ihn zu verwenden.</p></div><span class="section-icon">✳</span></div>
+          <div class="card-grid" id="agent-list"></div>
+          <div class="empty-state" id="agents-empty" hidden>Noch keine spezialisierten Agenten. Bitte Viktor im Chat, einen für dich zu erstellen.</div>
+        </section>
+
+        <section class="view" id="view-workspace">
+          <div class="section-intro"><div><span class="eyebrow">DATEIEN &amp; PROJEKTE</span><h2 id="project-title">Workspace</h2><p>Der freigegebene lokale Arbeitsbereich, in dem Viktor Dateien lesen und bearbeiten darf.</p></div><span class="section-icon">⌘</span></div>
+          <div class="file-list" id="file-list"></div>
+        </section>
+
+        <section class="view" id="view-memory">
+          <div class="section-intro"><div><span class="eyebrow">LOKAL GESPEICHERT</span><h2>Memory &amp; Aktivität</h2><p>Wichtige Notizen und die letzten Aufgaben bleiben lokal erhalten.</p></div><span class="section-icon">◫</span></div>
+          <h3 class="subheading">Erinnerungen</h3><div class="card-grid" id="memory-list"></div>
+          <h3 class="subheading">Aktivitätsprotokoll</h3><div class="log-list" id="log-list"></div>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div class="section-intro"><div><span class="eyebrow">MODELLVERBINDUNG</span><h2>Einstellungen</h2><p>VIKTOR verwendet Ollama lokal auf deinem Rechner.</p></div><span class="section-icon">⚙</span></div>
+          <form id="settings-form" class="settings-card">
+            <label>Ollama-Modellname<input id="model-name" type="text" required maxlength="120" placeholder="qwen3:4b"></label>
+            <div class="settings-hint">VIKTOR verbindet sich ausschließlich mit Ollama unter <code>http://127.0.0.1:11434</code>. Das ausgewählte Modell muss lokal installiert sein; beispielsweise: <code>ollama pull qwen3:4b</code>. Ollama und Modelle werden nicht mit Viktor gebündelt.</div>
+            <button type="submit" class="primary-button">Einstellungen speichern</button>
+            <p id="settings-feedback" class="feedback" aria-live="polite"></p>
+          </form>
+          <div class="notice"><strong>Datenschutz:</strong> Chat und Modellverarbeitung bleiben auf diesem Rechner. Dateien werden nur auf ausdrückliche Tool-Aufrufe gelesen; Schlüssel und <code>.env</code>-Dateien sind für Viktor-Tools gesperrt.</div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

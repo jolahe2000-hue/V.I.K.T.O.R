@@ -1,0 +1,14 @@
+{
+  "name": "viktor",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "A local, extensible personal AI assistant",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
